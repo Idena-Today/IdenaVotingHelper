@@ -1,6 +1,6 @@
 const { DerivableKey } = require("./DerivableKey");
-const bisurl = require("./bisurl");
-var bisUrl = bisurl.bisUrl;
+const dnaurl = require("./dnaurl");
+var dnaUrl = dnaurl.dnaUrl;
 
 function VotingTransaction(seed, address, motion_id, motion_txid, motion_address) {
   // We could accept word seed or seed, and derive seed from word seed depending on input type.
@@ -14,14 +14,14 @@ function VotingTransaction(seed, address, motion_id, motion_txid, motion_address
 }
 
 VotingTransaction.prototype.get_vote_transaction = function (vote_option, vote_amount) {
-  // Returns transaction json, including bisurl, for given path and option
+  // Returns transaction json, including dnaurl, for given path and option
 
   // TODO: make sure vote_amount is a float
-  transaction = { "amount": vote_amount, "recipient": this.motion_address, "operation": "bgvp:vote" }
+  transaction = { "amount": vote_amount, "recipient": this.motion_address }
 
-  transaction['openfield'] = this.motion_id.toString() + ":" + this.key.encrypt_vote_b64(vote_option);
+  transaction['data'] = "vote:" + this.motion_id.toString() + ":" + this.key.encrypt_vote_b64(vote_option);
 
-  transaction['bis_url'] = bisUrl(transaction);
+  transaction['dna_url'] = dnaUrl(transaction);
 
   return transaction;
 }
@@ -29,11 +29,11 @@ VotingTransaction.prototype.get_vote_transaction = function (vote_option, vote_a
 VotingTransaction.prototype.get_reveal_transaction = function () {
   // Returns transaction json, including bisurl, for given path and option
 
-  transaction = { "amount": 0, "recipient": this.motion_address, "operation": "bgvp:reveal" }
+  transaction = { "amount": 0, "recipient": this.motion_address }
 
-  transaction['openfield'] = this.motion_id.toString() + ":" +  this.key.reveal_key_b64();
+  transaction['data'] =  "reveal:" + this.motion_id.toString() + ":" +  this.key.reveal_key_b64();
 
-  transaction['bis_url'] = bisUrl(transaction);
+  transaction['dna_url'] = dnaUrl(transaction);
 
   return transaction;
 }

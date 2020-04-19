@@ -1,12 +1,14 @@
+// TODO: Redo all tests and vectors for DNA
+
 const { mnemonicToSeedSync } = require("bip39");
 
 const utils = require("../src/utils");
 const { DerivableKey } = require("../src/DerivableKey");
 const { VotingTransaction } = require("../src/VotingTransaction");
 
-const { bisUrl, checksum } = require("../src/bisurl");
+const { dnaUrl, checksum } = require("../src/dnaurl");
 
-const DEFAULT_PASSWORD = "BismuthGVP";
+const DEFAULT_PASSWORD = "DNA_Vote";
 
 const TEST_MNEMONIC = "letter advice cage absurd amount doctor acoustic avoid letter advice cage above";
 const TEST_SEED_HEX = "95a7ecb56bda5eba808eec2407b418002b824c6c1cb159ec44b8371405629f8429419e98e1b67fc6367368f5d82871a501bbc655a62d31e8391411d7a6e74b86";
@@ -152,8 +154,8 @@ describe("Voting Transaction Tests", () => {
     // console.log(transaction);
     expect(transaction['amount']).toBe(10);
     expect(transaction['recipient']).toBe("test_motion_address");
-    expect(transaction['operation']).toBe("bgvp:vote");
-    const message = transaction["openfield"].split(":")[1];
+    expect(transaction["data"].split(":")[1]).toBe("vote");
+    const message = transaction["data"].split(":")[2];
     const seed = mnemonicToSeedSync(TEST_MNEMONIC, DEFAULT_PASSWORD);
     const key = new DerivableKey(seed).derive("Bis_test_address1").derive("motion_1_txid_this_would_be_a_b64_encoded_string");
     const vote = key.decrypt_vote_b64(message);
@@ -166,8 +168,8 @@ describe("Voting Transaction Tests", () => {
     // console.log(transaction);
     expect(transaction['amount']).toBe(101);
     expect(transaction['recipient']).toBe("test_motion_address");
-    expect(transaction['operation']).toBe("bgvp:vote");
-    const message = transaction["openfield"].split(":")[1];
+    expect(transaction["data"].split(":")[1]).toBe("vote");
+    const message = transaction["data"].split(":")[2];
     const seed = mnemonicToSeedSync(TEST_MNEMONIC, DEFAULT_PASSWORD);
     const key = new DerivableKey(seed).derive("Bis_test_address1").derive("motion_1_txid_this_would_be_a_b64_encoded_string");
     const vote = key.decrypt_vote_b64(message);
@@ -190,22 +192,20 @@ describe("BisUrl Tests", () => {
     const transaction = {
       "recipient": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
       "amount": 0,
-      "operation": "op:test",
-      "openfield": "openfield_data"
+      "data": "openfield_data"
     };
-    const expected = "bis://pay/abcdef0123456789abcdef0123456789abcdef0123456789abcdef01/0/Z*V$vWpi`/Z*XO9W@%+?WM5=qbYT/c89#&9#h%MeO(h*k}9I|";
-    const check = bisUrl(transaction);
+    const expected = "dna://abcdef0123456789abcdef0123456789abcdef0123456789abcdef01/0/Z*V$vWpi`/Z*XO9W@%+?WM5=qbYT/c89#&9#h%MeO(h*k}9I|";
+    const check = dnaUrl(transaction);
     expect(check).toBe(expected);
   });
   test("Bisurl 2", () => {
     const transaction = {
       "recipient": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
       "amount": 0,
-      "operation": "bgvp:vote",
-      "openfield": "0:8ZmHckBjxb0DB8skooVAMw=="
+      "data": "0:8ZmHckBjxb0DB8skooVAMw=="
     };
-    const expected = "bis://pay/abcdef0123456789abcdef0123456789abcdef0123456789abcdef01/0/VrO=6I(Bb#Wd/FgiF|ZAfElLTY$oFhoK)b8ByJRzXd7Jv{/e&RE#IbWW*)0CtVGcN-=";
-    const check = bisUrl(transaction);
+    const expected = "dna://abcdef0123456789abcdef0123456789abcdef0123456789abcdef01/0/VrO=6I(Bb#Wd/FgiF|ZAfElLTY$oFhoK)b8ByJRzXd7Jv{/e&RE#IbWW*)0CtVGcN-=";
+    const check = dnaUrl(transaction);
     expect(check).toBe(expected);
   });
 });

@@ -13,11 +13,11 @@ const utils = require("./utils");
 
 const TEST_SEED_HEX =
   "95a7ecb56bda5eba808eec2407b418002b824c6c1cb159ec44b8371405629f8429419e98e1b67fc6367368f5d82871a501bbc655a62d31e8391411d7a6e74b86";
-const DEFAULT_PASSWORD = "BismuthGVP";
+const DEFAULT_PASSWORD = "DNA_Vote";
 
 const MOTION_ID = 1; // hardcoded motion id for the time being
-const MOTION_TXID = "MEQCIAPObnznl/wywdGtNYfIt8R2FTaBjjw2s1WMPozdwJEtAiBsoTo4"; // hardcoded motion txid for the time being
-const MOTION_ADDRESS = "Bis1SUPPLYFimnbVEx9sBxLAdPWNeTyEWMVf3"; // hardcoded motion address for the time being
+const MOTION_TXID = "ffffff"; // hardcoded motion txid for the time being
+const MOTION_ADDRESS = "0x000000000000000000000000000000"; // hardcoded motion address for the time being
 
 // TODO: to be used to check whether the related action is allowed. (hardcoded for first vote)
 const START_VOTE_TIMESTAMP = 1569931200; // from START_VOTE_TIMESTAMP to END_VOTE_TIMESTAMP user can send a vote
@@ -43,8 +43,21 @@ function displayMessage(id, type, show = true) {
 }
 
 function getTabsContent(transaction, seed, address, aes_key, voting_key, test_vote) {
-  //console.log(transaction.bis_url);
+  console.log(transaction.dna_url);
   return `
+    <div id="dna-url-tab" class="tab-content">
+<div class="flex justify-start mt-4" style="margin-bottom:10px;">
+<button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Your vote: ${transaction.amount} DNA for option ${test_vote}</button>
+<!-- button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Reveal Vote(s) for ${address}</button -->
+</div>
+    Send the following DnaUrl from the related wallet
+    <textarea id="dna-url-data" readonly class="font-mono w-full text-sm overflow-x-auto bg-purple-100 text-purple-900 p-2 resize-none rounded">${
+    transaction.dna_url
+    }</textarea>
+    <div class="flex justify-end mt-4">
+    <button data-id="dna-url" class="copy text-xs hover:bg-purple-200 font-bold text-purple-800 px-2 rounded">Copy to clipboard</button>
+    </div>
+  </div>
   <div id="raw-txn-tab" class="hidden tab-content">
 <div class="flex justify-start mt-4" style="margin-bottom:10px;">
 <button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Your vote: ${transaction.amount} DNA for option ${test_vote}</button>
@@ -55,16 +68,15 @@ function getTabsContent(transaction, seed, address, aes_key, voting_key, test_vo
     <textarea id="raw-txn-data" readonly class="font-mono w-full text-sm overflow-x-auto bg-purple-100 text-purple-900 p-2 resize-none rounded"">
 recipient: ${transaction.recipient}
 amount: ${transaction.amount}
-data: ${transaction.openfield}</textarea>
+data: ${transaction.data}</textarea>
 <div class="flex justify-end mt-4">
 <button data-id="raw-txn" class="copy text-xs hover:bg-purple-200 font-bold text-purple-800 px-2 rounded">Copy to clipboard</button>
 </div>
   </div>
   <div id="advanced-tab" class="hidden tab-content">
 <div class="flex justify-start mt-4" style="margin-bottom:10px;">
-<button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Your vote: ${transaction.amount} BIS for option ${test_vote}</button>
-<!
---button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Reveal Vote(s) for ${address}</button -->
+<button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Your vote: ${transaction.amount} DNA for option ${test_vote}</button>
+<!--button class="text bg-purple-200 font-bold text-purple-800 px-2 rounded">Reveal Vote(s) for ${address}</button -->
 </div>
     <textarea id="advanced-data" readonly class="font-mono w-full text-sm overflow-x-auto bg-purple-100 text-purple-900 p-2 resize-none rounded"">
 Master 512 bits Seed: ${seed.toString("hex")}
@@ -110,9 +122,6 @@ function generate_vote() {
   // trim address and validate, give feedback to user if invalid
   // A valid dna address matches this regexp:
   // 0x(40 chars)
-  // RE_RSA_ADDRESS "^[abcdef0123456789]{56}$"
-  // RE_ECDSA_ADDRESS "^Bis1[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{28,52}$"
-  // We can use "Bis_test_address1" - that does not validate - to test the GUI with test vectors
   const dnaAddressMatch = address.match(/^0x[abcdef0123456789]{40}$/);
   if (!dnaAddressMatch) {
     displayMessage("wallet-address", "error");
@@ -146,7 +155,7 @@ function generate_vote() {
   );
   const transaction = voting_transaction.get_vote_transaction(vote, amount);
   //console.log(transaction);
-  let test_message = transaction["openfield"].split(":")[1];
+  let test_message = transaction["data"].split(":")[2];
   let test_key = master_key.derive(address).derive(MOTION_TXID);
   let test_vote = test_key.decrypt_vote_b64(test_message);
   // console.log("Vote:", test_vote);
@@ -203,24 +212,14 @@ function generate_reveal() {
   }
   console.log("Valid mnemonic:", valid);
 
-  const address = document.querySelector("#wallet-address").value;
-  // trim address and validate, give feedback to user if invalid
-  // A valid bis address matches either one of these regexps:
-  // RE_RSA_ADDRESS "^[abcdef0123456789]{56}$"
-  // RE_ECDSA_ADDRESS "^Bis1[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{28,52}$"
-  // We can use "Bis_test_address1" - that does not validate - to test the GUI with test vectors
-  const rsaAddressMatch = address.match(/^[abcdef0123456789]{56}$/);
-  const ecdsaAddressMatch = address.match(
-    /^Bis1[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{28,52}$/
-  );
-  if (!(rsaAddressMatch || ecdsaAddressMatch)) {
+  const address = document.querySelector("#wallet-address").value.trim().toLowerCase();
+  const dnaAddressMatch = address.match(/^0x[abcdef0123456789]{40}$/);
+  if (!dnaAddressMatch) {
     displayMessage("wallet-address", "error");
     return;
   }
-
   // No need for option nor amount
   // TODO: (reveal) comment out the fields not required in HTML
-
   // This part is redundant, done by VotingTransaction later on, but can be useful for debug (advanced tab).
   const seed = bip39.mnemonicToSeedSync(mnemonic, DEFAULT_PASSWORD);
   const master_key = new DerivableKey(seed);
@@ -247,18 +246,18 @@ function generate_reveal() {
 document
     .querySelector('div[data-id="raw-txn-tab"]')
     .classList.add(...tabsActiveClasses);
-  /*
+
   document
-    .querySelector('div[data-id="bis-url-tab"]')
+    .querySelector('div[data-id="dna-url-tab"]')
     .classList.add(...tabsActiveClasses);
+
   document.querySelector("#result").innerHTML = getTabsContent(
     transaction,
     seed,
     address,
     aes_key,
-    voting_key,
-    ""
-  );*/
+    voting_key
+  );
   // COPY TO CLIPBOARD
   Array.from(document.querySelectorAll("button.copy")).forEach(btn => {
     btn.addEventListener("click", () => {
@@ -367,7 +366,7 @@ voteBButton.addEventListener("click", () => {
 
 
 // add listeners to remove errors when value changes
-["master-key", "wallet-address", "bis-amount"].forEach(field => {
+["master-key", "wallet-address", "dna-amount"].forEach(field => {
   const el = document.querySelector(`input#${field}`);
   if (el) {
     el.addEventListener("change", () => {
