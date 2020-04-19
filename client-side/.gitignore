@@ -1,0 +1,10 @@
+node_modules/
+npm-debug.log
+package-lock.json
+yarn.lock
+.vscode/*
+BundleAnalyser.stats.json
+report.html
+!dist/index.html
+!dist/main.js
+!dist/report.html
