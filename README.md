@@ -10,7 +10,7 @@ See the [Current voting helper POC](https://idena-today.github.io/IdenaVotingHel
 
 ## FAQ 
 
-WIP
+WIP 
 
 
 ### Reference
